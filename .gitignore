@@ -1,0 +1,8 @@
+# Downloaded upstream source and generated build products
+geant4-v*/
+geant4-v*-build/
+geant4-install/
+geant4-B1-test/
+
+# macOS metadata
+.DS_Store
