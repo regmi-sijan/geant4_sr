@@ -33,19 +33,38 @@ Results are written under `cloud-pipeline/output/`.
 
 ## Run with GitHub Actions
 
-Open **Actions → Cloud calorimeter simulation → Run workflow**, choose the
-number of events and random seed, and start the job. Download the
-`calorimeter-results-*` artifact when the job completes.
+Open **Actions → Cloud calorimeter simulation → Run workflow**. Choose a chunk
+number, events per chunk, and base seed. Start with chunk `0`, then run chunks
+`1`, `2`, and so on. Each successful chunk is uploaded independently as a
+`calorimeter-chunk-*` artifact and retained for 30 days.
+
+If a job is cancelled or reaches a usage limit, rerun the same chunk number.
+Its seed and global event-number range are deterministic, so it safely replaces
+the interrupted attempt. Completed chunks never need to be simulated again.
+GitHub also caches the compiled Geant4 container, independently of result
+artifacts.
+
+After downloading and placing chunk directories under `output/chunks/`, merge
+all chunks that contain a `completion.json` marker:
+
+```bash
+python analysis/merge_chunks.py
+```
+
+The marker is written only after generation, transport, and analysis all
+succeed, preventing partial chunks from being mistaken for valid results.
 
 The initial container build compiles Geant4 and is therefore the slowest run.
-Later runs reuse the GitHub Actions build cache.
+Later runs reuse the GitHub Actions build cache. For free-tier use, 10–50 events
+per chunk is a practical starting range; increase it only after observing the
+runtime of your selected physics configuration.
 
 ## Run with Docker
 
 ```bash
 docker build -t pythia-geant4-cloud -f .devcontainer/Dockerfile .
 docker run --rm \
-  -e EVENTS=100 -e SEED=12345 \
+  -e EVENTS=25 -e CHUNK_INDEX=0 -e EVENT_OFFSET=0 -e SEED=12345 \
   -v "$PWD:/workspace" -w /workspace \
   pythia-geant4-cloud \
   bash scripts/run_pipeline.sh

@@ -15,6 +15,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--events", type=int, default=100)
     parser.add_argument("--seed", type=int, default=12345)
+    parser.add_argument("--event-offset", type=int, default=0)
     parser.add_argument("--hepmc", type=Path, default=Path("output/events.hepmc"))
     parser.add_argument("--truth", type=Path, default=Path("output/truth.csv"))
     return parser.parse_args()
@@ -49,6 +50,8 @@ def main() -> None:
         raise ValueError("--events must be positive")
     if not 1 <= args.seed <= 900_000_000:
         raise ValueError("--seed must be between 1 and 900000000")
+    if args.event_offset < 0:
+        raise ValueError("--event-offset must be non-negative")
 
     args.hepmc.parent.mkdir(parents=True, exist_ok=True)
     args.truth.parent.mkdir(parents=True, exist_ok=True)
@@ -68,7 +71,8 @@ def main() -> None:
             # stable final state, so particles are stored at the implicit origin
             # without PYTHIA's internal shower-history vertices.
             event = pyhepmc.GenEvent(pyhepmc.Units.GEV, pyhepmc.Units.MM)
-            event.event_number = generated
+            event_id = args.event_offset + generated
+            event.event_number = event_id
 
             particle_id = 0
             for particle in pythia.event:
@@ -83,7 +87,7 @@ def main() -> None:
                 )
                 truth.writerow(
                     [
-                        generated,
+                        event_id,
                         particle_id,
                         particle.id(),
                         particle.px(),

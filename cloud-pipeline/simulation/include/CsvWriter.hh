@@ -6,7 +6,7 @@
 
 class CsvWriter {
  public:
-  explicit CsvWriter(const std::string& path);
+  explicit CsvWriter(const std::string& path, int event_offset = 0);
   ~CsvWriter();
 
   void WriteHit(int event_id, const std::string& detector, int eta_bin,
@@ -15,4 +15,5 @@ class CsvWriter {
  private:
   std::ofstream output_;
   std::mutex mutex_;
+  int event_offset_;
 };

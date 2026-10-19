@@ -3,12 +3,16 @@ name: Cloud calorimeter simulation
 on:
   workflow_dispatch:
     inputs:
-      events:
-        description: Number of PYTHIA events
+      chunk_index:
+        description: Chunk number (rerun the same number after an interruption)
         required: true
-        default: "100"
-      seed:
-        description: PYTHIA random seed
+        default: "0"
+      events_per_chunk:
+        description: Events in this independently saved chunk
+        required: true
+        default: "25"
+      base_seed:
+        description: Base random seed; each chunk derives its own seed
         required: true
         default: "12345"
 
@@ -36,11 +40,19 @@ jobs:
 
       - name: Run PYTHIA and Geant4
         env:
-          EVENTS: ${{ inputs.events }}
-          SEED: ${{ inputs.seed }}
+          CHUNK_INDEX: ${{ inputs.chunk_index }}
+          EVENTS: ${{ inputs.events_per_chunk }}
+          BASE_SEED: ${{ inputs.base_seed }}
         run: |
+          event_offset=$((CHUNK_INDEX * EVENTS))
+          seed=$((BASE_SEED + CHUNK_INDEX))
+          if (( seed > 900000000 )); then
+            echo "Derived seed exceeds PYTHIA's maximum" >&2
+            exit 2
+          fi
           docker run --rm \
-            -e EVENTS -e SEED \
+            -e EVENTS -e CHUNK_INDEX \
+            -e EVENT_OFFSET="$event_offset" -e SEED="$seed" \
             -v "$PWD/cloud-pipeline:/workspace" \
             -w /workspace \
             pythia-geant4-cloud:local \
@@ -49,6 +61,7 @@ jobs:
       - name: Upload simulation results
         uses: actions/upload-artifact@v4
         with:
-          name: calorimeter-results-${{ github.run_number }}
-          path: cloud-pipeline/output/
-          retention-days: 14
+          name: calorimeter-chunk-${{ inputs.chunk_index }}-run-${{ github.run_number }}
+          path: cloud-pipeline/output/chunks/chunk_*/
+          if-no-files-found: error
+          retention-days: 30
