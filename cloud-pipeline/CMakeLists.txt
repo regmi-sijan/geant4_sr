@@ -16,7 +16,16 @@ add_executable(calo_sim
   simulation/src/PrimaryGeneratorAction.cc
 )
 
-target_include_directories(calo_sim PRIVATE simulation/include)
-target_link_libraries(calo_sim PRIVATE ${Geant4_LIBRARIES} HepMC3::HepMC3)
+target_include_directories(calo_sim PRIVATE simulation/include ${HEPMC3_INCLUDE_DIR})
+
+# HepMC3's Homebrew package exports HepMC3::HepMC3, while Ubuntu's package
+# exposes the library through HEPMC3_LIBRARIES. Support both layouts.
+if(TARGET HepMC3::HepMC3)
+  set(HEPMC3_LINK_TARGET HepMC3::HepMC3)
+else()
+  set(HEPMC3_LINK_TARGET ${HEPMC3_LIBRARIES})
+endif()
+
+target_link_libraries(calo_sim PRIVATE ${Geant4_LIBRARIES} ${HEPMC3_LINK_TARGET})
 
 install(TARGETS calo_sim RUNTIME DESTINATION bin)
