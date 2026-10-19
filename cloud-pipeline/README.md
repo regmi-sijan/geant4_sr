@@ -33,36 +33,115 @@ Results are written under `cloud-pipeline/output/`.
 
 ## Run with GitHub Actions
 
-From a Mac Terminal, the convenience script starts chunk `0` with 20 events by
-default:
+### Complete run, monitoring, and download checklist
 
-```bash
-cd cloud-pipeline
-./scripts/run_cloud_chunk.sh
+The wrapper submits the calculation to GitHub Actions. The simulation runs on
+GitHub's cloud runner, not in the Mac Terminal process, so the result is **not
+automatically copied to the laptop**.
+
+1. From the local project directory, submit a run. With no arguments this uses
+   chunk `0`, 20 events, and base seed `12345`:
+
+   ```bash
+   cd /Users/sijanregmi/Documents/ChatGPT/GEANT4/cloud-pipeline
+   ./scripts/run_cloud_chunk.sh
+   ```
+
+   To select the chunk and number of events explicitly:
+
+   ```bash
+   ./scripts/run_cloud_chunk.sh 1 20
+   ```
+
+   An optional third argument changes the base seed; normally leave its
+   default value of `12345` unchanged.
+
+2. List recent workflow runs and note the numeric run ID of the submitted run:
+
+   ```bash
+   gh run list --repo regmi-sijan/geant4_sr --workflow cloud-simulation.yml
+   ```
+
+3. Watch that run's workflow-step progress in the Mac Terminal, replacing
+   `RUN_ID` with its number:
+
+   ```bash
+   gh run watch RUN_ID --repo regmi-sijan/geant4_sr --exit-status
+   ```
+
+   The command exits successfully when the workflow completes, or returns an
+   error if it fails. Closing this terminal does not stop a submitted cloud
+   job and does not erase its cloud output.
+
+4. For detailed live output, open the workflow on the
+   [GitHub Actions page](https://github.com/regmi-sijan/geant4_sr/actions) and
+   expand **Run PYTHIA and Geant4**. It displays pipeline phases and Geant4
+   event messages such as `Starting event 7/20` and `Completed event 7/20`.
+
+5. Download that run's artifact to the laptop, replacing `RUN_ID` with the
+   number from the previous command:
+
+   ```bash
+   ./scripts/download_cloud_results.sh RUN_ID
+   ```
+
+   To automatically download the latest successful cloud simulation, omit the
+   run ID:
+
+   ```bash
+   ./scripts/download_cloud_results.sh
+   ```
+
+   The equivalent direct GitHub CLI command is:
+
+   ```bash
+   gh run download RUN_ID --repo regmi-sijan/geant4_sr \
+     --pattern 'calorimeter-chunk-*' \
+     --dir ./geant4-results/run-RUN_ID
+   ```
+
+   The downloaded files are then kept locally under:
+
+   ```text
+   /Users/sijanregmi/Documents/ChatGPT/GEANT4/cloud-pipeline/geant4-results/run-RUN_ID/
+   ```
+
+6. Find and read the persistent pipeline log:
+
+   ```bash
+   find ./geant4-results/run-RUN_ID -name run.log
+   less ./geant4-results/run-RUN_ID/calorimeter-chunk-*/chunk_*/run.log
+   ```
+
+   Press `q` to exit `less`. GitHub's copy of the same output can be viewed
+   without downloading the artifact:
+
+   ```bash
+   gh run view RUN_ID --repo regmi-sijan/geant4_sr --log
+   ```
+
+7. Keep any important results on the laptop or an external drive. GitHub
+   retains this workflow's artifacts for 30 days; local downloaded copies do
+   not expire automatically.
+
+Each downloaded chunk contains:
+
+```text
+chunk_XXXXX/
+├── run.log
+├── events.hepmc
+├── truth.csv
+├── hits.csv
+├── completion.json
+└── analysis/
+    ├── event_summary.csv
+    ├── response.png
+    └── truth_vs_deposit.png
 ```
 
-Pass a chunk index and events per chunk when needed:
-
-```bash
-./scripts/run_cloud_chunk.sh 1 20
-```
-
-An optional third parameter changes the base seed; normally leave its default
-value of `12345` unchanged.
-
-After submission, monitor the workflow until it succeeds or fails:
-
-```bash
-gh run watch --repo regmi-sijan/geant4_sr --exit-status
-```
-
-A successful run displays a green check on GitHub and makes its
-`calorimeter-chunk-*` result artifact available for download.
-
-During execution, expand **Run PYTHIA and Geant4** on the Actions page to see
-per-event messages such as `Starting event 7/20` and `Completed event 7/20`.
-The complete terminal output is also saved as `run.log` inside the downloaded
-chunk artifact, so it remains available after the cloud runner is destroyed.
+`completion.json` confirms that event generation, Geant4 transport, and
+analysis all finished. If it is absent, treat that chunk as incomplete and
+rerun the same chunk index.
 
 Open **Actions → Cloud calorimeter simulation → Run workflow**. Choose a chunk
 number, events per chunk, and base seed. Start with chunk `0`, then run chunks

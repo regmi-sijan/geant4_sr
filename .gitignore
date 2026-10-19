@@ -14,6 +14,7 @@ __pycache__/
 # Cloud pipeline generated files
 cloud-pipeline/build/
 cloud-pipeline/output/
+cloud-pipeline/geant4-results/
 cloud-pipeline/*.hepmc
 cloud-pipeline/*.csv
 cloud-pipeline/*.png
