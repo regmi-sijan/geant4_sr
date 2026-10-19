@@ -49,3 +49,6 @@ gh workflow run "$workflow" \
 
 echo "Workflow submitted. View it at:"
 echo "https://github.com/$repository/actions"
+echo
+echo "Monitor the newest workflow from this Terminal with:"
+echo "gh run watch --repo $repository --exit-status"

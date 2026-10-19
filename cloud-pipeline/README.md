@@ -50,6 +50,15 @@ Pass a chunk index and events per chunk when needed:
 An optional third parameter changes the base seed; normally leave its default
 value of `12345` unchanged.
 
+After submission, monitor the workflow until it succeeds or fails:
+
+```bash
+gh run watch --repo regmi-sijan/geant4_sr --exit-status
+```
+
+A successful run displays a green check on GitHub and makes its
+`calorimeter-chunk-*` result artifact available for download.
+
 Open **Actions → Cloud calorimeter simulation → Run workflow**. Choose a chunk
 number, events per chunk, and base seed. Start with chunk `0`, then run chunks
 `1`, `2`, and so on. Each successful chunk is uploaded independently as a
