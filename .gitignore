@@ -7,6 +7,10 @@ geant4-B1-test/
 # macOS metadata
 .DS_Store
 
+# Python generated files
+__pycache__/
+*.py[cod]
+
 # Cloud pipeline generated files
 cloud-pipeline/build/
 cloud-pipeline/output/
