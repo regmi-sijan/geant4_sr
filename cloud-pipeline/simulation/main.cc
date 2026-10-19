@@ -1,6 +1,7 @@
 #include "CsvWriter.hh"
 #include "DetectorConstruction.hh"
 #include "PrimaryGeneratorAction.hh"
+#include "ProgressEventAction.hh"
 
 #include "FTFP_BERT.hh"
 #include "G4RunManager.hh"
@@ -56,10 +57,17 @@ int main(int argc, char** argv) {
 
     auto run_manager = std::make_unique<G4RunManager>();
     run_manager->SetUserInitialization(new DetectorConstruction(writer));
-    run_manager->SetUserInitialization(new FTFP_BERT());
+    run_manager->SetUserInitialization(new FTFP_BERT(0));
     run_manager->SetUserAction(new PrimaryGeneratorAction(options.input));
+    run_manager->SetUserAction(
+        new ProgressEventAction(options.events, options.event_offset));
     run_manager->Initialize();
+    std::cout << "[Geant4] Beginning transport of " << options.events
+              << " events\n";
     run_manager->BeamOn(options.events);
+    std::cout << "[Geant4] Completed all " << options.events
+              << " events successfully\n"
+              << "[Geant4] Hit output: " << options.output << '\n';
     return 0;
   } catch (const std::exception& error) {
     std::cerr << "calo_sim: " << error.what() << '\n';

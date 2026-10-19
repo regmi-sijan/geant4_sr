@@ -59,6 +59,11 @@ gh run watch --repo regmi-sijan/geant4_sr --exit-status
 A successful run displays a green check on GitHub and makes its
 `calorimeter-chunk-*` result artifact available for download.
 
+During execution, expand **Run PYTHIA and Geant4** on the Actions page to see
+per-event messages such as `Starting event 7/20` and `Completed event 7/20`.
+The complete terminal output is also saved as `run.log` inside the downloaded
+chunk artifact, so it remains available after the cloud runner is destroyed.
+
 Open **Actions → Cloud calorimeter simulation → Run workflow**. Choose a chunk
 number, events per chunk, and base seed. Start with chunk `0`, then run chunks
 `1`, `2`, and so on. Each successful chunk is uploaded independently as a
@@ -101,6 +106,7 @@ docker run --rm \
 - `events.hepmc`: generated HepMC3 events.
 - `truth.csv`: stable-particle truth record.
 - `hits.csv`: non-zero cell energy deposits.
+- `run.log`: persistent build, generation, transport, and analysis log.
 - `analysis/event_summary.csv`: event-level truth and detector response.
 - `analysis/truth_vs_deposit.png`: truth versus deposited energy.
 - `analysis/response.png`: calorimeter response distribution.

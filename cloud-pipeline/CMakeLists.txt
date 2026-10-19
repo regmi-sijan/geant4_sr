@@ -14,6 +14,7 @@ add_executable(calo_sim
   simulation/src/CsvWriter.cc
   simulation/src/DetectorConstruction.cc
   simulation/src/PrimaryGeneratorAction.cc
+  simulation/src/ProgressEventAction.cc
 )
 
 target_include_directories(calo_sim PRIVATE simulation/include ${HEPMC3_INCLUDE_DIR})
