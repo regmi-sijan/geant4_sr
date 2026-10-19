@@ -1,0 +1,19 @@
+{
+  "name": "PYTHIA + Geant4 calorimeter",
+  "build": {
+    "dockerfile": "../cloud-pipeline/.devcontainer/Dockerfile",
+    "context": "../cloud-pipeline"
+  },
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}/cloud-pipeline",
+  "remoteUser": "root",
+  "postCreateCommand": "cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build --parallel 2",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cmake-tools",
+        "ms-vscode.cpptools",
+        "ms-python.python"
+      ]
+    }
+  }
+}

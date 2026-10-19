@@ -2,6 +2,18 @@
 
 Geant4 11.4.2 was built natively for this Apple Silicon Mac with Qt, OpenGL, GDML, multithreading, and the standard physics datasets.
 
+## Cloud PYTHIA + Geant4 project
+
+The [`cloud-pipeline`](cloud-pipeline/) project is a reproducible collider
+simulation that runs without using the local Geant4 installation. It generates
+200 GeV proton-proton collisions with PYTHIA 8, writes HepMC3 events, transports
+them through a segmented Geant4 calorimeter, and creates CSV summaries and
+response plots.
+
+It is configured for both GitHub Codespaces and the manually triggered
+**Cloud calorimeter simulation** GitHub Actions workflow. See the
+[`cloud-pipeline` guide](cloud-pipeline/README.md) for usage and detector details.
+
 ## Location
 
 The complete Geant4 build is located at:
