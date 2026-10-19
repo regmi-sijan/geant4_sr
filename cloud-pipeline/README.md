@@ -33,6 +33,23 @@ Results are written under `cloud-pipeline/output/`.
 
 ## Run with GitHub Actions
 
+From a Mac Terminal, the convenience script starts chunk `0` with 20 events by
+default:
+
+```bash
+cd cloud-pipeline
+./scripts/run_cloud_chunk.sh
+```
+
+Pass a chunk index and events per chunk when needed:
+
+```bash
+./scripts/run_cloud_chunk.sh 1 20
+```
+
+An optional third parameter changes the base seed; normally leave its default
+value of `12345` unchanged.
+
 Open **Actions → Cloud calorimeter simulation → Run workflow**. Choose a chunk
 number, events per chunk, and base seed. Start with chunk `0`, then run chunks
 `1`, `2`, and so on. Each successful chunk is uploaded independently as a
