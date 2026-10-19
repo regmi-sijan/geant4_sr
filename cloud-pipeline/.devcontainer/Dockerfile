@@ -31,5 +31,6 @@ RUN curl -fsSL "https://github.com/Geant4/geant4/archive/refs/tags/v${GEANT4_VER
 
 ENV PATH=/opt/geant4/bin:$PATH
 ENV CMAKE_PREFIX_PATH=/opt/geant4
+ENV LD_LIBRARY_PATH=/opt/geant4/lib
 WORKDIR /workspace
 CMD ["bash"]
