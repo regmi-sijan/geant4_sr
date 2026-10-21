@@ -11,6 +11,8 @@ collider detector, and produces event-level calorimeter response plots.
 - Effective iron/scintillator HCal from 120–170 cm radius.
 - 64 azimuthal bins and 24 longitudinal bins per calorimeter.
 - `FTFP_BERT` Geant4 physics list.
+- A shared collision vertex per event with `x = y = 0` and Gaussian
+  `z` (`sigma = 33.33 cm`), truncated at `-100 cm < z < 100 cm`.
 - Headless CSV output suitable for cloud execution.
 
 This geometry is intentionally simplified. It is useful for software studies,
@@ -131,6 +133,7 @@ chunk_XXXXX/
 ├── run.log
 ├── events.hepmc
 ├── truth.csv
+├── vertices.csv
 ├── hits.csv
 ├── completion.json
 └── analysis/
@@ -184,8 +187,10 @@ docker run --rm \
 
 - `events.hepmc`: generated HepMC3 events.
 - `truth.csv`: stable-particle truth record.
+- `vertices.csv`: one shared collision vertex per event, in millimetres.
 - `hits.csv`: non-zero cell energy deposits.
 - `run.log`: persistent build, generation, transport, and analysis log.
-- `analysis/event_summary.csv`: event-level truth and detector response.
+- `analysis/event_summary.csv`: one row for every generated event, retaining
+  its collision vertex coordinates alongside truth and detector response.
 - `analysis/truth_vs_deposit.png`: truth versus deposited energy.
 - `analysis/response.png`: calorimeter response distribution.

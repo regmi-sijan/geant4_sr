@@ -24,7 +24,7 @@ if not completed:
     raise SystemExit(f"No completed chunks found under {args.chunks}")
 
 args.output.mkdir(parents=True, exist_ok=True)
-for filename in ("truth.csv", "hits.csv"):
+for filename in ("truth.csv", "hits.csv", "vertices.csv"):
     frames = [pd.read_csv(chunk / filename) for chunk in completed]
     merged = pd.concat(frames, ignore_index=True).sort_values("event_id")
     merged.to_csv(args.output / filename, index=False)
@@ -37,6 +37,8 @@ subprocess.run(
         str(args.output / "truth.csv"),
         "--hits",
         str(args.output / "hits.csv"),
+        "--vertices",
+        str(args.output / "vertices.csv"),
         "--output-dir",
         str(args.output / "analysis"),
     ],

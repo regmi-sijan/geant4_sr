@@ -3,6 +3,7 @@
 import argparse
 import csv
 import os
+import random
 from pathlib import Path
 
 os.environ.pop("PYTHIA8DATA", None)
@@ -16,8 +17,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--events", type=int, default=100)
     parser.add_argument("--seed", type=int, default=12345)
     parser.add_argument("--event-offset", type=int, default=0)
+    parser.add_argument("--vertex-z-sigma-mm", type=float, default=1000.0 / 3.0)
+    parser.add_argument("--vertex-z-max-mm", type=float, default=1000.0)
     parser.add_argument("--hepmc", type=Path, default=Path("output/events.hepmc"))
     parser.add_argument("--truth", type=Path, default=Path("output/truth.csv"))
+    parser.add_argument("--vertices", type=Path, default=Path("output/vertices.csv"))
     return parser.parse_args()
 
 
@@ -52,39 +56,54 @@ def main() -> None:
         raise ValueError("--seed must be between 1 and 900000000")
     if args.event_offset < 0:
         raise ValueError("--event-offset must be non-negative")
+    if args.vertex_z_sigma_mm <= 0:
+        raise ValueError("--vertex-z-sigma-mm must be positive")
+    if args.vertex_z_max_mm <= 0:
+        raise ValueError("--vertex-z-max-mm must be positive")
 
     args.hepmc.parent.mkdir(parents=True, exist_ok=True)
     args.truth.parent.mkdir(parents=True, exist_ok=True)
+    args.vertices.parent.mkdir(parents=True, exist_ok=True)
     pythia = configure(args.seed)
+    vertex_rng = random.Random(args.seed)
     with pyhepmc.io.WriterAscii(str(args.hepmc)) as writer, args.truth.open(
         "w", newline=""
-    ) as truth_file:
+    ) as truth_file, args.vertices.open("w", newline="") as vertex_file:
         truth = csv.writer(truth_file)
         truth.writerow(["event_id", "particle_id", "pdg", "px_gev", "py_gev", "pz_gev", "energy_gev"])
+        vertices = csv.writer(vertex_file)
+        vertices.writerow(["event_id", "vertex_x_mm", "vertex_y_mm", "vertex_z_mm"])
 
         generated = 0
         while generated < args.events:
             if not pythia.next():
                 continue
 
-            # Build a deliberately simple HepMC3 record. Geant4 only needs the
-            # stable final state, so particles are stored at the implicit origin
-            # without PYTHIA's internal shower-history vertices.
+            # Use one shared beam-collision vertex for every final-state particle
+            # in the event. Draw z from a Gaussian and reject the tails outside
+            # the configured three-sigma envelope. The separate seeded RNG keeps
+            # the vertex reproducible without changing PYTHIA's random sequence.
+            vertex_z_mm = vertex_rng.gauss(0.0, args.vertex_z_sigma_mm)
+            while abs(vertex_z_mm) > args.vertex_z_max_mm:
+                vertex_z_mm = vertex_rng.gauss(0.0, args.vertex_z_sigma_mm)
+
             event = pyhepmc.GenEvent(pyhepmc.Units.GEV, pyhepmc.Units.MM)
             event_id = args.event_offset + generated
             event.event_number = event_id
+            collision_vertex = pyhepmc.GenVertex((0.0, 0.0, vertex_z_mm, 0.0))
+            event.add_vertex(collision_vertex)
+            vertices.writerow([event_id, 0.0, 0.0, vertex_z_mm])
 
             particle_id = 0
             for particle in pythia.event:
                 if not particle.isFinal():
                     continue
-                event.add_particle(
-                    pyhepmc.GenParticle(
-                        (particle.px(), particle.py(), particle.pz(), particle.e()),
-                        particle.id(),
-                        1,
-                    )
+                hepmc_particle = pyhepmc.GenParticle(
+                    (particle.px(), particle.py(), particle.pz(), particle.e()),
+                    particle.id(),
+                    1,
                 )
+                collision_vertex.add_particle_out(hepmc_particle)
                 truth.writerow(
                     [
                         event_id,
@@ -99,10 +118,13 @@ def main() -> None:
                 particle_id += 1
             writer.write_event(event)
             generated += 1
-            print(f"generated event {generated}/{args.events}")
+            print(
+                f"generated event {generated}/{args.events} "
+                f"at vertex z={vertex_z_mm:.3f} mm"
+            )
 
     pythia.stat()
-    print(f"wrote {args.hepmc} and {args.truth}")
+    print(f"wrote {args.hepmc}, {args.truth}, and {args.vertices}")
 
 
 if __name__ == "__main__":
