@@ -16,6 +16,7 @@
 namespace {
 struct Options {
   std::string input;
+  std::string vertices;
   std::string output = "hits.csv";
   int events = 10;
   int event_offset = 0;
@@ -30,11 +31,13 @@ Options ParseOptions(int argc, char** argv) {
       return std::string(argv[i]);
     };
     if (arg == "--input") options.input = value(arg);
+    else if (arg == "--vertices") options.vertices = value(arg);
     else if (arg == "--output") options.output = value(arg);
     else if (arg == "--events") options.events = std::stoi(value(arg));
     else if (arg == "--event-offset") options.event_offset = std::stoi(value(arg));
     else if (arg == "--help") {
-      std::cout << "Usage: calo_sim --input events.hepmc [--output hits.csv] "
+      std::cout << "Usage: calo_sim --input events.hepmc --vertices vertices.csv "
+                   "[--output hits.csv] "
                    "[--events N] [--event-offset N]\n";
       std::exit(0);
     } else {
@@ -42,6 +45,7 @@ Options ParseOptions(int argc, char** argv) {
     }
   }
   if (options.input.empty()) throw std::runtime_error("--input is required");
+  if (options.vertices.empty()) throw std::runtime_error("--vertices is required");
   if (options.events < 1) throw std::runtime_error("--events must be positive");
   if (options.event_offset < 0)
     throw std::runtime_error("--event-offset must be non-negative");
@@ -58,13 +62,17 @@ int main(int argc, char** argv) {
     auto run_manager = std::make_unique<G4RunManager>();
     run_manager->SetUserInitialization(new DetectorConstruction(writer));
     run_manager->SetUserInitialization(new FTFP_BERT(0));
-    run_manager->SetUserAction(new PrimaryGeneratorAction(options.input));
+    auto* primary = new PrimaryGeneratorAction(options.input, options.vertices);
+    run_manager->SetUserAction(primary);
     run_manager->SetUserAction(
         new ProgressEventAction(options.events, options.event_offset));
     run_manager->Initialize();
     std::cout << "[Geant4] Beginning transport of " << options.events
               << " events\n";
     run_manager->BeamOn(options.events);
+    if (primary->Failed()) {
+      throw std::runtime_error(primary->FailureReason());
+    }
     std::cout << "[Geant4] Completed all " << options.events
               << " events successfully\n"
               << "[Geant4] Hit output: " << options.output << '\n';

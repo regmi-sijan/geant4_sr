@@ -90,20 +90,19 @@ def main() -> None:
             event = pyhepmc.GenEvent(pyhepmc.Units.GEV, pyhepmc.Units.MM)
             event_id = args.event_offset + generated
             event.event_number = event_id
-            collision_vertex = pyhepmc.GenVertex((0.0, 0.0, vertex_z_mm, 0.0))
-            event.add_vertex(collision_vertex)
             vertices.writerow([event_id, 0.0, 0.0, vertex_z_mm])
 
             particle_id = 0
             for particle in pythia.event:
                 if not particle.isFinal():
                     continue
-                hepmc_particle = pyhepmc.GenParticle(
-                    (particle.px(), particle.py(), particle.pz(), particle.e()),
-                    particle.id(),
-                    1,
+                event.add_particle(
+                    pyhepmc.GenParticle(
+                        (particle.px(), particle.py(), particle.pz(), particle.e()),
+                        particle.id(),
+                        1,
+                    )
                 )
-                collision_vertex.add_particle_out(hepmc_particle)
                 truth.writerow(
                     [
                         event_id,

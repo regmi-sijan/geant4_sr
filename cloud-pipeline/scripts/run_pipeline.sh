@@ -31,7 +31,8 @@ python generator/generate_events.py \
   --vertices "$output_dir/vertices.csv"
 echo "[Pipeline] Starting Geant4 transport"
 ./build/calo_sim \
-  --input "$output_dir/events.hepmc" --output "$output_dir/hits.csv" \
+  --input "$output_dir/events.hepmc" --vertices "$output_dir/vertices.csv" \
+  --output "$output_dir/hits.csv" \
   --events "$events" --event-offset "$event_offset"
 echo "[Pipeline] Creating analysis outputs"
 python analysis/analyze_response.py \

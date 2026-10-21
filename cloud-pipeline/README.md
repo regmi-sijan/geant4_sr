@@ -11,7 +11,8 @@ collider detector, and produces event-level calorimeter response plots.
 - Effective iron/scintillator HCal from 120–170 cm radius.
 - 64 azimuthal bins and 24 longitudinal bins per calorimeter.
 - `FTFP_BERT` Geant4 physics list.
-- A shared collision vertex per event with `x = y = 0` and Gaussian
+- A shared collision vertex per event, read by Geant4 from `vertices.csv`, with
+  `x = y = 0` and Gaussian
   `z` (`sigma = 33.33 cm`), truncated at `-100 cm < z < 100 cm`.
 - Headless CSV output suitable for cloud execution.
 
