@@ -27,8 +27,11 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(const std::string& input_path,
     throw std::runtime_error("Cannot open vertex input: " + vertices_path);
   }
   std::string header;
-  if (!std::getline(vertices_, header) ||
-      header != "event_id,vertex_x_mm,vertex_y_mm,vertex_z_mm") {
+  if (!std::getline(vertices_, header)) {
+    throw std::runtime_error("Missing vertex CSV header: " + vertices_path);
+  }
+  if (!header.empty() && header.back() == '\r') header.pop_back();
+  if (header != "event_id,vertex_x_mm,vertex_y_mm,vertex_z_mm") {
     throw std::runtime_error("Invalid vertex CSV header: " + vertices_path);
   }
 }
